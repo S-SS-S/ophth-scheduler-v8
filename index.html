@@ -299,10 +299,10 @@
           healthyChildren: "Healthy children (primary vision screening)",
           t1dm: "Type 1 diabetes (adults)",
           t2dm: "Type 2 diabetes (adults)",
-          dmPregnancy: "Pregnancy with pre‑existing diabetes (T1/T2)",
+          dmPregnancy: "Pregnancy with pre-existing diabetes (T1/T2)",
           gdm: "Gestational diabetes",
           glauSuspect: "Glaucoma suspect / ocular hypertension",
-          fhGlaucoma: "First‑degree relative of a glaucoma patient (no personal suspicion)",
+          fhGlaucoma: "First-degree relative of a glaucoma patient (no personal suspicion)",
           highMyopia: "High myopia (≤ −6.0 D or axial length > 26 mm)",
           hcq: "Hydroxychloroquine / chloroquine",
           tamox: "Tamoxifen",
@@ -314,9 +314,9 @@
           t1dm: "Begin 5 years after diagnosis, then annually.",
           annual: "Annual (every year).",
           pregnancyDM: "Before conception and first trimester; each trimester; postpartum per clinician.",
-          gdm: "No retinopathy exam during pregnancy; resume age‑based routine after delivery.",
+          gdm: "No retinopathy exam during pregnancy; resume age-based routine after delivery.",
           hcq: "Baseline within first year; annually after 5 years of use.",
-          tamox: "Baseline in year 1; annual if >5 years or high dose; otherwise age‑based routine.",
+          tamox: "Baseline in year 1; annual if >5 years or high dose; otherwise age-based routine.",
           thyroidEye: "Every 3–6 months while active; annually when stable/euthyroid."
         }
       }
@@ -371,7 +371,7 @@
         const cond = CONDITIONS.find(c=>c.id===id);
         const chip = document.createElement('span');
         chip.className = 'chip';
-        chip.innerHTML = `<span>${t(` + "conds." + `.${id}`)}</span><button type="button" aria-label="remove" class="text-slate-500 hover:text-rose-600">×</button>`;
+        chip.innerHTML = `<span>${t(`conds.${id}`)}</span><button type="button" aria-label="remove" class="text-slate-500 hover:text-rose-600">×</button>`;
         chip.querySelector('button').onclick = () => { selectedIds.delete(id); renderChips(); renderDropdown(searchEl.value); toggleExtra(); };
         chipsEl.appendChild(chip);
       });
@@ -381,7 +381,7 @@
     function renderDropdown(filter=''){
       const f = filter.trim().toLowerCase();
       dropdownEl.innerHTML = '';
-      CONDITIONS.filter(c => t(` + "conds." + `.${c.id}`).toLowerCase().includes(f))
+      CONDITIONS.filter(c => t(`conds.${c.id}`).toLowerCase().includes(f))
         .forEach(c => {
           const row = document.createElement('button');
           row.type = 'button';
@@ -391,8 +391,8 @@
             <div class="flex items-start gap-2">
               <input type="checkbox" ${checked?'checked':''} class="mt-1 pointer-events-none rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
               <div>
-                <div class="font-medium">${t(` + "conds." + `.${c.id})}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">${t(` + "explain." + `.${c.type})}</div>
+                <div class="font-medium">${t(`conds.${c.id}`)}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">${t(`explain.${c.type}`)}</div>
               </div>
             </div>`;
           row.onclick = () => { if(checked) selectedIds.delete(c.id); else selectedIds.add(c.id); renderChips(); renderDropdown(f); toggleExtra(); };
@@ -408,7 +408,7 @@
     clearBtn.addEventListener('click', ()=> { selectedIds.clear(); renderChips(); renderDropdown(searchEl.value); toggleExtra(); });
     document.addEventListener('click', (e)=> { if(!rootEl.contains(e.target)) closeDropdown(); });
 
-    function getSelectedConditions(){ return CONDITIONS.filter(c=> selectedIds.has(c.id)).map(c => ({...c, label: t(` + "conds." + `.${c.id})})); }
+    function getSelectedConditions(){ return CONDITIONS.filter(c=> selectedIds.has(c.id)).map(c => ({...c, label: t(`conds.${c.id}`)})); }
 
     // ===== Age group toggle =====
     const ageGroupToggle = document.getElementById('ageGroupToggle');
@@ -482,11 +482,11 @@
             else { recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 1), window: [addYears(lastVisit,1), addYears(lastVisit,2)], basis:t('explain.ageRange') + ' (≥65)' }); }
             break; }
           case 'text': { notes.push(t('explain.text')); break; }
-          case 't1dm': { if (isFinite(extras.t1Years) && extras.t1Years < 5){ notes.push(currentLang==='ar' ? 'سكري نوع أول: يبدأ فحص الشبكية بعد 5 سنوات من التشخيص (أو الآن إذا لم تُفحص سابقًا)، ثم سنويًا.' : 'Type 1 DM: start retinal screening 5 years after diagnosis (or now if never screened), then annually.'); } const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar' ? 'سنوي بعد بدء المتابعة' : 'Annual once follow‑up starts' }); break; }
+          case 't1dm': { if (isFinite(extras.t1Years) && extras.t1Years < 5){ notes.push(currentLang==='ar' ? 'سكري نوع أول: يبدأ فحص الشبكية بعد 5 سنوات من التشخيص (أو الآن إذا لم تُفحص سابقًا)، ثم سنويًا.' : 'Type 1 DM: start retinal screening 5 years after diagnosis (or now if never screened), then annually.'); } const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar' ? 'سنوي بعد بدء المتابعة' : 'Annual once follow-up starts' }); break; }
           case 'pregnancyDM': { notes.push(t('explain.pregnancyDM')); break; }
           case 'gdm': { notes.push(t('explain.gdm')); break; }
-          case 'hcq': { if (extras.hcqYears >= 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي بعد 5 سنوات من الاستخدام':'Annual after 5 years of use' }); } else { notes.push(currentLang==='ar' ? 'استخدام HCQ/كوروكين أقل من 5 سنوات: اتبع الجدول العمري؛ قد يلزم أبكر إذا مرتفع الخطورة.' : 'HCQ/chloroquine <5 years: follow age‑based routine; earlier if high risk.'); } break; }
-          case 'tamox': { if (extras.tamoxHighDose || extras.tamoxYears > 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي (>5 سنوات أو جرعات مرتفعة)':'Annual (>5 years or high dose)' }); } else { notes.push(currentLang==='ar' ? 'تاموكسيفين ≤ 5 سنوات وبدون جرعات مرتفعة: اتبع الجدول العمري.' : 'Tamoxifen ≤5 years and not high dose: follow age‑based routine.'); } break; }
+          case 'hcq': { if (extras.hcqYears >= 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي بعد 5 سنوات من الاستخدام':'Annual after 5 years of use' }); } else { notes.push(currentLang==='ar' ? 'استخدام HCQ/كوروكين أقل من 5 سنوات: اتبع الجدول العمري؛ قد يلزم أبكر إذا مرتفع الخطورة.' : 'HCQ/chloroquine <5 years: follow age-based routine; earlier if high risk.'); } break; }
+          case 'tamox': { if (extras.tamoxHighDose || extras.tamoxYears > 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي (>5 سنوات أو جرعات مرتفعة)':'Annual (>5 years or high dose)' }); } else { notes.push(currentLang==='ar' ? 'تاموكسيفين ≤ 5 سنوات وبدون جرعات مرتفعة: اتبع الجدول العمري.' : 'Tamoxifen ≤5 years and not high dose: follow age-based routine.'); } break; }
           case 'thyroidEye': { if (extras.tedActive){ const early = addMonths(lastVisit, 3); const late  = addMonths(lastVisit, 6); recommendations.push({ id:c.id, label:c.label, nextDate: early, window:[early, late], basis: currentLang==='ar'?'كل 3–6 أشهر أثناء النشاط':'Every 3–6 months while active' }); } else { const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window:null, basis: currentLang==='ar'?'سنوي بعد الاستقرار':'Annual when stable' }); } break; }
         }
       });
@@ -537,7 +537,18 @@
         const conds = selected.map(s=>s.label).join(', ');
         const title = currentLang==='ar' ? 'موعد فحص عيون موصى به' : 'Recommended ophthalmology visit';
         const desc = (currentLang==='ar' ? 'مبني على الحالات: ' : 'Based on conditions: ') + conds;
-        const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//OphthoScheduler//EN\nCALSCALE:GREGORIAN\nBEGIN:VEVENT\nUID:${Date.now()}@ophtho\nDTSTAMP:${ymd}T080000Z\nDTSTART;VALUE=DATE:${ymd}\nSUMMARY:${title}\nDESCRIPTION:${desc}\nEND:VEVENT\nEND:VCALENDAR`;
+        const ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OphthoScheduler//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:${Date.now()}@ophtho
+DTSTAMP:${ymd}T080000Z
+DTSTART;VALUE=DATE:${ymd}
+SUMMARY:${title}
+DESCRIPTION:${desc}
+END:VEVENT
+END:VCALENDAR`;
         const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ophthalmology-visit.ics'; a.click(); URL.revokeObjectURL(url);
       };
     });
