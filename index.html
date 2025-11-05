@@ -15,7 +15,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     html { scroll-behavior: smooth; }
-    /* NOTE: @apply requires a Tailwind build step; left as-is to keep your original exactly. */
     .card { @apply bg-white/80 dark:bg-slate-900/70 backdrop-blur shadow-lg rounded-2xl border border-gray-200 dark:border-slate-700; }
     .chip { @apply inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800; }
     .btn { @apply px-4 py-2 rounded-xl border bg-white text-slate-700 hover:bg-slate-50 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700; }
@@ -113,7 +112,7 @@
           <div id="extra-ted" class="hidden">
             <div class="flex items-center gap-2">
               <input id="tedActive" type="checkbox" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-              <label id="lblTedActive" for="tedActive" class="text-sm">نشِط حاليًا (مرض عين दरقي)</label>
+              <label id="lblTedActive" for="tedActive" class="text-sm">نشِط حاليًا (مرض عين درقي)</label>
             </div>
             <p id="helpTed" class="text-xs text-slate-500 mt-1">نشِط: كل 3–6 أشهر. مستقر: سنوي.</p>
           </div>
@@ -372,7 +371,7 @@
         const cond = CONDITIONS.find(c=>c.id===id);
         const chip = document.createElement('span');
         chip.className = 'chip';
-        chip.innerHTML = `<span>${t(\`conds.${id}\`)}</span><button type="button" aria-label="remove" class="text-slate-500 hover:text-rose-600">×</button>`;
+        chip.innerHTML = `<span>${t(`conds.${id}`)}</span><button type="button" aria-label="remove" class="text-slate-500 hover:text-rose-600">×</button>`;
         chip.querySelector('button').onclick = () => { selectedIds.delete(id); renderChips(); renderDropdown(searchEl.value); toggleExtra(); };
         chipsEl.appendChild(chip);
       });
@@ -382,7 +381,7 @@
     function renderDropdown(filter=''){
       const f = filter.trim().toLowerCase();
       dropdownEl.innerHTML = '';
-      CONDITIONS.filter(c => t(\`conds.${c.id}\`).toLowerCase().includes(f))
+      CONDITIONS.filter(c => t(`conds.${c.id}`).toLowerCase().includes(f))
         .forEach(c => {
           const row = document.createElement('button');
           row.type = 'button';
@@ -392,8 +391,8 @@
             <div class="flex items-start gap-2">
               <input type="checkbox" ${checked?'checked':''} class="mt-1 pointer-events-none rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
               <div>
-                <div class="font-medium">${t(\`conds.${c.id}\`)}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">${t(\`explain.${c.type}\`)}</div>
+                <div class="font-medium">${t(`conds.${c.id}`)}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">${t(`explain.${c.type}`)}</div>
               </div>
             </div>`;
           row.onclick = () => { if(checked) selectedIds.delete(c.id); else selectedIds.add(c.id); renderChips(); renderDropdown(f); toggleExtra(); };
@@ -409,7 +408,7 @@
     clearBtn.addEventListener('click', ()=> { selectedIds.clear(); renderChips(); renderDropdown(searchEl.value); toggleExtra(); });
     document.addEventListener('click', (e)=> { if(!rootEl.contains(e.target)) closeDropdown(); });
 
-    function getSelectedConditions(){ return CONDITIONS.filter(c=> selectedIds.has(c.id)).map(c => ({...c, label: t(\`conds.${c.id}\`)})); }
+    function getSelectedConditions(){ return CONDITIONS.filter(c=> selectedIds.has(c.id)).map(c => ({...c, label: t(`conds.${c.id}`)})); }
 
     // ===== Age group toggle =====
     const ageGroupToggle = document.getElementById('ageGroupToggle');
@@ -441,7 +440,16 @@
     document.getElementById('printBtn').addEventListener('click', () => window.print());
 
     // ===== Submit + validation =====
-    function showFieldError(inputId, message){ const input = document.getElementById(inputId); const err = document.getElementById(inputId+'Error'); if(!(input&&err)) return; err.textContent = message; err.classList.remove('hidden'); input.classList.add('invalid'); input.scrollIntoView({ behavior:'smooth', block:'start' }); setTimeout(()=> input.focus({preventScroll:true}), 350); }
+    function showFieldError(inputId, message){
+      const input = document.getElementById(inputId);
+      const err = document.getElementById(inputId+'Error');
+      if(!(input&&err)) return;
+      err.textContent = message;
+      err.classList.remove('hidden');
+      input.classList.add('invalid');
+      input.scrollIntoView({ behavior:'smooth', block:'start' });
+      setTimeout(()=> input.focus({preventScroll:true}), 350);
+    }
 
     document.getElementById('schedulerForm').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -469,33 +477,98 @@
       const selected = getSelectedConditions();
       if(selected.length === 0){ showOnlyGeneral(ageYears, ageGroupLabel, lastVisit); return; }
 
-      const extras = { hcqYears: parseInt(document.getElementById('hcqYears')?.value || '0', 10), tamoxYears: parseInt(document.getElementById('tamoxYears')?.value || '0', 10), tamoxHighDose: !!document.getElementById('tamoxHighDose')?.checked, tedActive: !!document.getElementById('tedActive')?.checked, t1Years: parseInt(document.getElementById('t1Years')?.value || '0', 10) };
+      const extras = {
+        hcqYears: parseInt(document.getElementById('hcqYears')?.value || '0', 10),
+        tamoxYears: parseInt(document.getElementById('tamoxYears')?.value || '0', 10),
+        tamoxHighDose: !!document.getElementById('tamoxHighDose')?.checked,
+        tedActive: !!document.getElementById('tedActive')?.checked,
+        t1Years: parseInt(document.getElementById('t1Years')?.value || '0', 10)
+      };
 
       const recommendations = []; const notes = [];
 
       selected.forEach(c => {
         switch(c.type){
-          case 'annual': { const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis:t('explain.annual') }); break; }
+          case 'annual': {
+            const next = addYears(lastVisit, 1);
+            recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis:t('explain.annual') });
+            break;
+          }
           case 'ageRange': {
             if (ageYears < 40) { notes.push(t('adultsUnder40')); }
-            else if (ageYears >= 40 && ageYears <= 54) { recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 2), window: [addYears(lastVisit,2), addYears(lastVisit,4)], basis:t('explain.ageRange') + ' (40–54)' }); }
-            else if (ageYears >= 55 && ageYears <= 64) { recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 1), window: [addYears(lastVisit,1), addYears(lastVisit,3)], basis:t('explain.ageRange') + ' (55–64)' }); }
-            else { recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 1), window: [addYears(lastVisit,1), addYears(lastVisit,2)], basis:t('explain.ageRange') + ' (≥65)' }); }
-            break; }
-          case 'text': { notes.push(t('explain.text')); break; }
-          case 't1dm': { if (isFinite(extras.t1Years) && extras.t1Years < 5){ notes.push(currentLang==='ar' ? 'سكري نوع أول: يبدأ فحص الشبكية بعد 5 سنوات من التشخيص (أو الآن إذا لم تُفحص سابقًا)، ثم سنويًا.' : 'Type 1 DM: start retinal screening 5 years after diagnosis (or now if never screened), then annually.'); } const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar' ? 'سنوي بعد بدء المتابعة' : 'Annual once follow-up starts' }); break; }
+            else if (ageYears >= 40 && ageYears <= 54) {
+              recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 2), window: [addYears(lastVisit,2), addYears(lastVisit,4)], basis:t('explain.ageRange') + ' (40–54)' });
+            } else if (ageYears >= 55 && ageYears <= 64) {
+              recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 1), window: [addYears(lastVisit,1), addYears(lastVisit,3)], basis:t('explain.ageRange') + ' (55–64)' });
+            } else {
+              recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 1), window: [addYears(lastVisit,1), addYears(lastVisit,2)], basis:t('explain.ageRange') + ' (≥65)' });
+            }
+            break;
+          }
+          case 'text': {
+            notes.push(t('explain.text'));
+            break;
+          }
+          case 't1dm': {
+            if (isFinite(extras.t1Years) && extras.t1Years < 5){
+              notes.push(currentLang==='ar'
+                ? 'سكري نوع أول: يبدأ فحص الشبكية بعد 5 سنوات من التشخيص (أو الآن إذا لم تُفحص سابقًا)، ثم سنويًا.'
+                : 'Type 1 DM: start retinal screening 5 years after diagnosis (or now if never screened), then annually.'
+              );
+            }
+            const next = addYears(lastVisit, 1);
+            recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar' ? 'سنوي بعد بدء المتابعة' : 'Annual once follow-up starts' });
+            break;
+          }
           case 'pregnancyDM': { notes.push(t('explain.pregnancyDM')); break; }
           case 'gdm': { notes.push(t('explain.gdm')); break; }
-          case 'hcq': { if (extras.hcqYears >= 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي بعد 5 سنوات من الاستخدام':'Annual after 5 years of use' }); } else { notes.push(currentLang==='ar' ? 'استخدام HCQ/كوروكين أقل من 5 سنوات: اتبع الجدول العمري؛ قد يلزم أبكر إذا مرتفع الخطورة.' : 'HCQ/chloroquine <5 years: follow age-based routine; earlier if high risk.'); } break; }
-          case 'tamox': { if (extras.tamoxHighDose || extras.tamoxYears > 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي (>5 سنوات أو جرعات مرتفعة)':'Annual (>5 years or high dose)' }); } else { notes.push(currentLang==='ar' ? 'تاموكسيفين ≤ 5 سنوات وبدون جرعات مرتفعة: اتبع الجدول العمري.' : 'Tamoxifen ≤5 years and not high dose: follow age-based routine.'); } break; }
-          case 'thyroidEye': { if (extras.tedActive){ const early = addMonths(lastVisit, 3); const late  = addMonths(lastVisit, 6); recommendations.push({ id:c.id, label:c.label, nextDate: early, window:[early, late], basis: currentLang==='ar'?'كل 3–6 أشهر أثناء النشاط':'Every 3–6 months while active' }); } else { const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window:null, basis: currentLang==='ar'?'سنوي بعد الاستقرار':'Annual when stable' }); } break; }
+          case 'hcq': {
+            if (extras.hcqYears >= 5){
+              const next = addYears(lastVisit, 1);
+              recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي بعد 5 سنوات من الاستخدام':'Annual after 5 years of use' });
+            } else {
+              notes.push(currentLang==='ar'
+                ? 'استخدام HCQ/كوروكين أقل من 5 سنوات: اتبع الجدول العمري؛ قد يلزم أبكر إذا مرتفع الخطورة.'
+                : 'HCQ/chloroquine <5 years: follow age-based routine; earlier if high risk.'
+              );
+            }
+            break;
+          }
+          case 'tamox': {
+            if (extras.tamoxHighDose || extras.tamoxYears > 5){
+              const next = addYears(lastVisit, 1);
+              recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي (>5 سنوات أو جرعات مرتفعة)':'Annual (>5 years or high dose)' });
+            } else {
+              notes.push(currentLang==='ar'
+                ? 'تاموكسيفين ≤ 5 سنوات وبدون جرعات مرتفعة: اتبع الجدول العمري.'
+                : 'Tamoxifen ≤5 years and not high dose: follow age-based routine.'
+              );
+            }
+            break;
+          }
+          case 'thyroidEye': {
+            if (extras.tedActive){
+              const early = addMonths(lastVisit, 3);
+              const late  = addMonths(lastVisit, 6);
+              recommendations.push({ id:c.id, label:c.label, nextDate: early, window:[early, late], basis: currentLang==='ar'?'كل 3–6 أشهر أثناء النشاط':'Every 3–6 months while active' });
+            } else {
+              const next = addYears(lastVisit, 1);
+              recommendations.push({ id:c.id, label:c.label, nextDate: next, window:null, basis: currentLang==='ar'?'سنوي بعد الاستقرار':'Annual when stable' });
+            }
+            break;
+          }
         }
       });
 
-      const dated = recommendations.filter(r => r.nextDate instanceof Date && !isNaN(r.nextDate)).sort((a,b)=> a.nextDate - b.nextDate);
+      const dated = recommendations
+        .filter(r => r.nextDate instanceof Date && !isNaN(r.nextDate))
+        .sort((a,b)=> a.nextDate - b.nextDate);
       const earliest = dated.length ? dated[0] : null;
 
-      const resultsCard = document.getElementById('resultsCard'); const summary = document.getElementById('summary'); const details = document.getElementById('details'); const dueBanner = document.getElementById('dueBanner');
+      const resultsCard = document.getElementById('resultsCard');
+      const summary = document.getElementById('summary');
+      const details = document.getElementById('details');
+      const dueBanner = document.getElementById('dueBanner');
       resultsCard.classList.remove('hidden');
 
       let s = '';
@@ -505,18 +578,31 @@
 
       if (earliest){
         s += `<div class="mt-2 text-lg">${t('earliest')}: <span class="font-semibold">${fmt(earliest.nextDate)}</span></div>`;
-        const today0 = new Date(); today0.setHours(0,0,0,0); const diff = daysBetween(earliest.nextDate, today0);
+        const today0 = new Date(); today0.setHours(0,0,0,0);
+        const diff = daysBetween(earliest.nextDate, today0);
         dueBanner.classList.remove('hidden');
-        if (diff < 0){ dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700 text-rose-800 dark:text-rose-200'; dueBanner.textContent = tp('overdueBy', Math.abs(diff)); }
-        else if (diff === 0){ dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200'; dueBanner.textContent = t('dueNow'); }
-        else { dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200'; dueBanner.textContent = tp('dueIn', diff); }
-      } else { s += `<div class="mt-2 text-lg">${t('noneAuto')}</div>`; dueBanner.classList.add('hidden'); }
+        if (diff < 0){
+          dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700 text-rose-800 dark:text-rose-200';
+          dueBanner.textContent = tp('overdueBy', Math.abs(diff));
+        } else if (diff === 0){
+          dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200';
+          dueBanner.textContent = t('dueNow');
+        } else {
+          dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200';
+          dueBanner.textContent = tp('dueIn', diff);
+        }
+      } else {
+        s += `<div class="mt-2 text-lg">${t('noneAuto')}</div>`;
+        dueBanner.classList.add('hidden');
+      }
       summary.innerHTML = s;
 
-      const earliestOnly = document.getElementById('earliestOnly').checked; const list = earliestOnly && earliest ? [earliest] : dated;
+      const earliestOnly = document.getElementById('earliestOnly').checked;
+      const list = earliestOnly && earliest ? [earliest] : dated;
       details.innerHTML = '';
       list.forEach(r => {
-        const row = document.createElement('div'); row.className = 'p-3 border rounded-xl bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600';
+        const row = document.createElement('div');
+        row.className = 'p-3 border rounded-xl bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600';
         const windowTxt = r.window ? `${t('window')}: ${fmt(r.window[0])} → ${fmt(r.window[1])}` : '';
         row.innerHTML = `<div class="font-medium">${r.label}</div>
           <div class="text-sm text-slate-700 dark:text-slate-300">${t('basis')}: ${r.basis}</div>
@@ -537,7 +623,10 @@ ${t('condHeader')}: ${conds}`;
       };
 
       document.getElementById('icsBtn').onclick = () => {
-        if(!earliest) return; const dt = earliest.nextDate; const y = dt.getFullYear(); const m = String(dt.getMonth()+1).padStart(2,'0'); const d = String(dt.getDate()).padStart(2,'0'); const ymd = `${y}${m}${d}`;
+        if(!earliest) return;
+        const dt = earliest.nextDate;
+        const y = dt.getFullYear(); const m = String(dt.getMonth()+1).padStart(2,'0'); const d = String(dt.getDate()).padStart(2,'0');
+        const ymd = `${y}${m}${d}`;
         const conds = selected.map(s=>s.label).join(', ');
         const title = currentLang==='ar' ? 'موعد فحص عيون موصى به' : 'Recommended ophthalmology visit';
         const desc = (currentLang==='ar' ? 'مبني على الحالات: ' : 'Based on conditions: ') + conds;
@@ -553,21 +642,42 @@ SUMMARY:${title}
 DESCRIPTION:${desc}
 END:VEVENT
 END:VCALENDAR`;
-        const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ophthalmology-visit.ics'; a.click(); URL.revokeObjectURL(url);
+        const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'ophthalmology-visit.ics'; a.click();
+        URL.revokeObjectURL(url);
       };
     });
 
     function showOnlyGeneral(ageYears, ageGroupLabel, lastVisit){
-      const resultsCard = document.getElementById('resultsCard'); const summary = document.getElementById('summary'); const details = document.getElementById('details'); const dueBanner = document.getElementById('dueBanner');
+      const resultsCard = document.getElementById('resultsCard');
+      const summary = document.getElementById('summary');
+      const details = document.getElementById('details');
+      const dueBanner = document.getElementById('dueBanner');
       resultsCard.classList.remove('hidden');
-      let s = `<div class=\"text-sm text-slate-600 dark:text-slate-300\">${t('lastVisitShort')}: <span class=\"font-medium\">${fmt(lastVisit)}</span>`;
-      if (ageYears!=null) s += ` • ${t('age')}: <span class=\"font-medium\">${ageGroupLabel||ageYears}</span>`; s += `</div>`;
+
+      let s = `<div class="text-sm text-slate-600 dark:text-slate-300">${t('lastVisitShort')}: <span class="font-medium">${fmt(lastVisit)}</span>`;
+      if (ageYears!=null) s += ` • ${t('age')}: <span class="font-medium">${ageGroupLabel||ageYears}</span>`;
+      s += `</div>`;
+
       let blocks = '';
-      if (ageYears < 40){ s += `<div class="mt-2">${t('adultsUnder40')}</div>`; }
-      else if (ageYears <= 54){ s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,2))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,4))}</span></div>`; blocks += block(t('conds.noRiskAdults') + ' (40–54)', t('explain.ageRange'), addYears(lastVisit,2), [addYears(lastVisit,2), addYears(lastVisit,4)]); }
-      else if (ageYears <= 64){ s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,1))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,3))}</span></div>`; blocks += block(t('conds.noRiskAdults') + ' (55–64)', t('explain.ageRange'), addYears(lastVisit,1), [addYears(lastVisit,1), addYears(lastVisit,3)]); }
-      else { s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,1))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,2))}</span></div>`; blocks += block(t('conds.noRiskAdults') + ' (≥65)', t('explain.ageRange'), addYears(lastVisit,1), [addYears(lastVisit,1), addYears(lastVisit,2)]); }
-      summary.innerHTML = s; dueBanner.classList.add('hidden'); details.innerHTML = blocks; resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (ageYears < 40){
+        s += `<div class="mt-2">${t('adultsUnder40')}</div>`;
+      } else if (ageYears <= 54){
+        s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,2))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,4))}</span></div>`;
+        blocks += block(t('conds.noRiskAdults') + ' (40–54)', t('explain.ageRange'), addYears(lastVisit,2), [addYears(lastVisit,2), addYears(lastVisit,4)]);
+      } else if (ageYears <= 64){
+        s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,1))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,3))}</span></div>`;
+        blocks += block(t('conds.noRiskAdults') + ' (55–64)', t('explain.ageRange'), addYears(lastVisit,1), [addYears(lastVisit,1), addYears(lastVisit,3)]);
+      } else {
+        s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,1))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,2))}</span></div>`;
+        blocks += block(t('conds.noRiskAdults') + ' (≥65)', t('explain.ageRange'), addYears(lastVisit,1), [addYears(lastVisit,1), addYears(lastVisit,2)]);
+      }
+
+      summary.innerHTML = s;
+      dueBanner.classList.add('hidden');
+      details.innerHTML = blocks;
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function block(title, basis, nextDate, window){
